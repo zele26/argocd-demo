@@ -1,16 +1,24 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
- name: argocd-demo
- namespace: argocd
+  name: argocd-demo
+  namespace: argocd
 spec:
- syncPolicy:
-  automated: {}
- project: default
- source:
-  repoURL: https://github.com/zele26/argocd-demo.git
-  targetRevision: HEAD
-  path: .
- destination:
-  server: https://kubernetes.default.svc
-  namespace: default
+  project: default
+  source:
+    repoURL: https://github.com/zele26/argocd-demo.git
+    targetRevision: HEAD
+    path: .
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - Replace=true
+    - ServerSideApply=true
+    - CreateNamespace=true
+    - Prune=confirm
+    - ApplyOutOfSyncOnly=true

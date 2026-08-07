@@ -1,0 +1,24 @@
+kubectl replace --force -f - << 'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/component: notifications-controller
+    app.kubernetes.io/name: argocd-notifications-controller
+    app.kubernetes.io/part-of: argocd
+data:
+  service.telegram: |
+    token: $telegram-token
+
+  template.app-sync-succeeded: |
+    telegram:
+      message: |
+        🎉 <b>Application {{ .app.metadata.name }} sync succeeded!</b>
+        App synced to revision <code>{{ .app.status.sync.revision }}</code>.
+
+  trigger.on-sync-succeeded: |
+    - when: app.status.operationState.phase in ['Succeeded'] && app.status.health.status == 'Healthy'
+      send: [app-sync-succeeded]
+EOF
