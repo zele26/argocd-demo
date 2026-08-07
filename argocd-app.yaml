@@ -4,6 +4,8 @@ metadata:
  name: argocd-demo
  namespace: argocd
 spec:
+ syncPolicy:
+  automated: {}
  project: default
  source:
   repoURL: https://github.com/zele26/argocd-demo.git
