@@ -5,7 +5,7 @@ metadata:
   labels:
     app: nginx-demo
 spec:
-  replicas: "invalid replica"
+  replicas: 10
   selector:
     matchLabels:
       app: nginx-demo

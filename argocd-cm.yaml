@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/name: argocd-notifications-controller
     app.kubernetes.io/part-of: argocd
 data:
+  # --- TELEGRAM INTEGRATION ---
   service.telegram: |
     token: $telegram-token
 
@@ -20,16 +21,20 @@ data:
   # --- FAILURE TEMPLATE ---
   template.app-sync-failed: |
     message: |
-      ⚠️ <b>Application {{ .app.metadata.name }} sync FAILED!</b>
-      <b>Revision:</b> <code>{{ if .app.status.operationState }}{{ .app.status.operationState.syncResult.revision }}{{ else }}N/A{{ end }}</code>
+      ⚠️ <b>Application {{ .app.metadata.name }} Sync / Comparison FAILED!</b>
       <b>Reason / Error:</b>
-      <pre>{{ if .app.status.operationState }}{{ .app.status.operationState.message }}{{ else }}Unknown error during sync operation.{{ end }}</pre>
+      <pre>{{ if .app.status.conditions }}{{ (index .app.status.conditions 0).message }}{{ else if .app.status.operationState }}{{ .app.status.operationState.message }}{{ else }}Manifest comparison error or app degraded.{{ end }}</pre>
 
   # --- TRIGGERS ---
+  # Safely check each property for nil before accessing nested keys
   trigger.on-sync-succeeded: |
-    - when: app.status.operationState != nil && app.status.operationState.phase in ['Succeeded'] && app.status.health.status == 'Healthy'
+    - when: app.status.operationState != nil && app.status.operationState.phase in ['Succeeded'] && app.status.health != nil && app.status.health.status == 'Healthy' && app.status.conditions == nil
       send: [app-sync-succeeded]
 
   trigger.on-sync-failed: |
     - when: app.status.operationState != nil && app.status.operationState.phase in ['Failed', 'Error']
+      send: [app-sync-failed]
+    - when: app.status.conditions != nil
+      send: [app-sync-failed]
+    - when: app.status.health != nil && app.status.health.status == 'Degraded'
       send: [app-sync-failed]
