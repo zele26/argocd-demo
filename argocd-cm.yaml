@@ -13,19 +13,17 @@ data:
 
   # --- SUCCESS TEMPLATE ---
   template.app-sync-succeeded: |
-    telegram:
-      message: |
-        🎉 <b>Application {{ .app.metadata.name }} sync succeeded!</b>
-        App synced to revision <code>{{ if .app.status.operationState }}{{ .app.status.operationState.syncResult.revision }}{{ else }}{{ .app.status.sync.revision }}{{ end }}</code>.
+    message: |
+      🎉 <b>Application {{ .app.metadata.name }} sync succeeded!</b>
+      App synced to revision <code>{{ if .app.status.operationState }}{{ .app.status.operationState.syncResult.revision }}{{ else }}{{ .app.status.sync.revision }}{{ end }}</code>.
 
   # --- FAILURE TEMPLATE ---
   template.app-sync-failed: |
-    telegram:
-      message: |
-        ⚠️ <b>Application {{ .app.metadata.name }} sync FAILED!</b>
-        <b>Revision:</b> <code>{{ if .app.status.operationState }}{{ .app.status.operationState.syncResult.revision }}{{ else }}N/A{{ end }}</code>
-        <b>Reason / Error:</b>
-        <pre>{{ if .app.status.operationState }}{{ .app.status.operationState.message }}{{ else }}Unknown error during sync operation.{{ end }}</pre>
+    message: |
+      ⚠️ <b>Application {{ .app.metadata.name }} sync FAILED!</b>
+      <b>Revision:</b> <code>{{ if .app.status.operationState }}{{ .app.status.operationState.syncResult.revision }}{{ else }}N/A{{ end }}</code>
+      <b>Reason / Error:</b>
+      <pre>{{ if .app.status.operationState }}{{ .app.status.operationState.message }}{{ else }}Unknown error during sync operation.{{ end }}</pre>
 
   # --- TRIGGERS ---
   trigger.on-sync-succeeded: |
