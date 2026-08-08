@@ -1,4 +1,3 @@
-kubectl replace --force -f - << 'EOF'
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,13 +11,27 @@ data:
   service.telegram: |
     token: $telegram-token
 
+  # --- SUCCESS TEMPLATE ---
   template.app-sync-succeeded: |
     telegram:
       message: |
         🎉 <b>Application {{ .app.metadata.name }} sync succeeded!</b>
-        App synced to revision <code>{{ .app.status.sync.revision }}</code>.
+        App synced to revision <code>{{ if .app.status.operationState }}{{ .app.status.operationState.syncResult.revision }}{{ else }}{{ .app.status.sync.revision }}{{ end }}</code>.
 
+  # --- FAILURE TEMPLATE ---
+  template.app-sync-failed: |
+    telegram:
+      message: |
+        ⚠️ <b>Application {{ .app.metadata.name }} sync FAILED!</b>
+        <b>Revision:</b> <code>{{ if .app.status.operationState }}{{ .app.status.operationState.syncResult.revision }}{{ else }}N/A{{ end }}</code>
+        <b>Reason / Error:</b>
+        <pre>{{ if .app.status.operationState }}{{ .app.status.operationState.message }}{{ else }}Unknown error during sync operation.{{ end }}</pre>
+
+  # --- TRIGGERS ---
   trigger.on-sync-succeeded: |
-    - when: app.status.operationState.phase in ['Succeeded'] && app.status.health.status == 'Healthy'
+    - when: app.status.operationState != nil && app.status.operationState.phase in ['Succeeded'] && app.status.health.status == 'Healthy'
       send: [app-sync-succeeded]
-EOF
+
+  trigger.on-sync-failed: |
+    - when: app.status.operationState != nil && app.status.operationState.phase in ['Failed', 'Error']
+      send: [app-sync-failed]
